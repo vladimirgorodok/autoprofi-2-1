@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="mobile-web-app-capable" content="yes">
+<title>АвтоПрофи 2.1</title>
+<style>
+:root{--bg:#f3f7f6;--cd:#fff;--tx:#0f1f1e;--mu:#5b6f6d;--ac:#0f766e;--on:#fff;--bd:#d9e4e2;--bad:#b42318;--ok:#067647;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0c1413;--cd:#142120;--tx:#e6f1ef;--mu:#8aa3a0;--ac:#2dd4bf;--on:#04201c;--bd:#233836;--bad:#f97066;--ok:#47cd89;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0c1413;--cd:#142120;--tx:#e6f1ef;--mu:#8aa3a0;--ac:#2dd4bf;--on:#04201c;--bd:#233836;--bad:#f97066;--ok:#47cd89;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:84px}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--ac);color:var(--on);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;z-index:5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--ac);z-index:10}
+header b{font-size:17px}#st{font-size:12px;opacity:.9}
+main{padding:12px;max-width:760px;margin:auto}
+.c{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:12px}
+h2{font-size:15px;margin:0 0 8px}h3{font-size:13px;color:var(--mu);margin:14px 0 6px;font-weight:600}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.g div{background:var(--bg);border-radius:10px;padding:8px}.g small{color:var(--mu);display:block;font-size:11px}.g b{font-size:15px}
+.r{display:flex;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--bd);cursor:pointer}.r:last-child{border:0}
+.r small{color:var(--mu);display:block}.r .a{white-space:nowrap;font-weight:600}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:var(--ac);color:var(--on);border:0;border-radius:10px;padding:9px 14px;font-weight:600}
+button.s{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}button.d{background:var(--bad);color:#fff}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px;margin-bottom:8px}
+label{font-size:12px;color:var(--mu);display:block;margin-bottom:2px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--cd);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom,0px);z-index:6}
+nav a{flex:1;text-align:center;padding:10px 2px;font-size:12px;color:var(--mu);cursor:pointer}nav a.on{color:var(--ac);font-weight:700}
+nav a i{display:block;font-style:normal;font-size:19px}
+#sh{position:fixed;inset:0;background:#0008;display:none;align-items:flex-end;z-index:20}#sh.o{display:flex}
+#sh>div{background:var(--cd);width:100%;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:14px;max-width:760px;margin:auto}
+.bar{display:flex;gap:8px;margin-top:8px}.bar>*{flex:1}.warn{color:var(--bad)}.ok{color:var(--ok)}
+.fab{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));border-radius:50%;width:52px;height:52px;font-size:26px;padding:0;z-index:7}
+</style></head><body>
+<header><b>АвтоПрофи 2.1</b><span id="st">Подключаем облако…</span></header>
+<main id="m"></main><div id="sh"><div id="shc"></div></div>
+<nav id="nv"></nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const ents={
+vehicles:{t:'Автомобили',f:[['name','Название'],['plate','Госномер'],['type','Тип','s',['Тягач','Прицеп']],['brand','Марка'],['model','Модель'],['vin','VIN'],['year','Год','n'],['fuelNorm','Норма, л/100 км','n'],['notes','Заметки','t']],l:r=>r.name,s:r=>[r.type,r.plate].filter(Boolean).join(' · ')},
+companies:{t:'Фирмы',f:[['name','Название']],l:r=>r.name},
+cargos:{t:'Грузы',f:[['name','Название']],l:r=>r.name},
+places:{t:'Места',f:[['name','Название'],['address','Адрес'],['coordinates','Координаты'],['contact','Контакт'],['loadingType','Тип погрузки','s',['Боковая','Задняя','Верхняя']],['companyId','Фирма','r','companies'],['typicalCargoId','Типовой груз','r','cargos'],['notes','Заметки','t']],l:r=>r.name,s:r=>r.address},
+periods:{t:'Периоды',f:[['name','Название'],['vehicleId','Автомобиль','r','vehicles'],['startDate','Начало','d'],['endDate','Конец','d'],['notes','Заметки','t']],l:r=>r.name,s:r=>nm('vehicles',r.vehicleId)},
+waybills:{t:'Путевые листы',f:[['vehicleId','Тягач','r','vehicles'],['trailerId','Прицеп','r','vehicles'],['periodId','Период','r','periods'],['departureDate','Выезд','d'],['returnDate','Возврат','d'],['odometerOut','Одометр выезд','n'],['odometerIn','Одометр возврат','n'],['fuelOut','Топливо выезд, л','n'],['fuelIn','Топливо возврат, л','n'],['notes','Заметки','t']],a:r=>(fd(r.departureDate)||'?')+' — '+(fd(r.returnDate)||'…'),l:r=>r.name,s:r=>nm('vehicles',r.vehicleId),sort:'departureDate'},
+trips:{t:'Поездки',f:[['name','Маршрут'],['waybillId','Путевой лист','r','waybills'],['cargo','Груз'],['weightKg','Вес, кг','n'],['loadingType','Тип погрузки','s',['Боковая','Задняя','Верхняя']],['accrual','Начислено, ₽','n'],['notes','Заметки','t']],l:r=>r.name,s:r=>r.cargo,am:r=>mny(r.accrual),sort:'name'},
+stops:{t:'Точки маршрута',f:[['tripId','Поездка','r','trips'],['direction','Тип','s',['Погрузка','Выгрузка']],['placeId','Место','r','places'],['order','Порядок','n'],['plannedDate','План','d'],['arrivedAt','Прибытие','d']],a:r=>(fd(r.plannedDate||r.date)||'без даты')+' · '+(r.direction||'')+' · '+(nm('places',r.placeId)||r.placeName||'место не указано'),l:r=>r.name,s:r=>[r.plannedDate&&'план '+fd(r.plannedDate,1),r.arrivedAt&&'прибыл '+fd(r.arrivedAt,1)].filter(Boolean).join(' · ')},
+gasStations:{t:'АЗС',f:[['name','Название'],['notes','Заметки','t']],l:r=>r.name},
+fuels:{t:'Заправки',f:[['dateTime','Дата и время','d'],['liters','Литры','n'],['source','Источник','s',['АЗС','Бочка']],['gasStationId','АЗС','r','gasStations'],['waybillId','Путевой лист','r','waybills']],a:r=>(fd(r.dateTime,1)||'без времени')+' · '+(r.liters||0)+' л',l:r=>r.name,s:r=>r.source,sort:'dateTime'},
+finances:{t:'Финансы',f:[['type','Тип','s',['Начислено','Оплачено']],['date','Дата','d'],['amount','Сумма, ₽','n'],['description','Описание'],['tripId','Поездка','r','trips'],['waybillId','Путевой лист','r','waybills'],['reconciliationStatus','Сверка','s',['','Сверка','Совпадает','Расхождение']]],a:r=>fd(r.date)+' · '+r.type+' · '+(r.amount||0)+' руб.',l:r=>r.name,s:r=>r.description,am:r=>mny(r.amount),sort:'date'}
+};
+const FILES={vehicles:'01-vehicles.csv',companies:'02-companies.csv',cargos:'03-cargos.csv',places:'04-places.csv',periods:'05-periods.csv',waybills:'06-waybills.csv',trips:'07-trips.csv',stops:'08-stops.csv',gasStations:'09-gas-stations.csv',fuels:'10-fuels.csv',finances:'11-finances.csv'};
+const D={};Object.keys(ents).forEach(k=>D[k]={});
+const SB_URL='https://acnqtykjnanvjpgjqclq.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbnF0eWtqbmFudmpwZ2pxY2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMTQ2MzYsImV4cCI6MjEwNjc5MDYzNn0.57co3__KQsnriIrlx9Fb0fzuc580N2fKrAOiR6f-xd0';
+const sb=supabase.createClient(SB_URL,SB_KEY);const T=k=>k=='gasStations'?'gas_stations':k;
+let view=null,vs=[],db=null,tab='home',q='',ent='vehicles',more=false;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mny=n=>n===''||n==null?'':Number(n).toLocaleString('ru-RU')+' ₽';
+const fd=(i,t)=>{if(!i)return'';const d=new Date(i);if(isNaN(d))return'';const p=n=>String(n).padStart(2,'0');return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+(t?' '+p(d.getHours())+':'+p(d.getMinutes()):'')};
+const nm=(k,id)=>(D[k]&&D[k][id]&&(D[k][id].name||''))||'';
+const vals=k=>Object.values(D[k]);
+const num=v=>Number(v)||0;
+const rid=()=>'rec'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const lbl=(k,r)=>(ents[k].a?ents[k].a(r):r.name)||'—';
+function toLocal(i){if(!i)return'';const d=new Date(i);if(isNaN(d))return'';const o=d.getTimezoneOffset()*6e4;return new Date(d-o).toISOString().slice(0,16)}
+function sum(k,f,p){return vals(k).filter(p||(()=>1)).reduce((a,r)=>a+num(r[f]),0)}
+
+/* ---------- Главная ---------- */
+function dupes(){const out=[],by={};vals('fuels').forEach(r=>{if(r.notDup||!r.dateTime)return;(by[r.waybillId||'-']=by[r.waybillId||'-']||[]).push(r)});
+Object.values(by).forEach(a=>{a.sort((x,y)=>new Date(x.dateTime)-new Date(y.dateTime));for(let i=1;i<a.length;i++)if(num(a[i].liters)==num(a[i-1].liters)&&new Date(a[i].dateTime)-new Date(a[i-1].dateTime)<=15*6e4)out.push(a[i])});return out}
+function home(){
+const acc=sum('finances','amount',r=>r.type=='Начислено'),paid=sum('finances','amount',r=>r.type=='Оплачено');
+const km=vals('waybills').reduce((a,r)=>a+Math.max(0,num(r.odometerIn)-num(r.odometerOut)),0),L=sum('fuels','liters');
+const open=vals('waybills').filter(r=>!r.returnDate),dp=dupes();
+let h='<div class="c"><h2>Итого</h2><div class="g"><div><small>Начислено</small><b>'+mny(acc)+'</b></div><div><small>Оплачено</small><b>'+mny(paid)+'</b></div><div><small>Остаток</small><b>'+mny(acc-paid)+'</b></div></div><div class="g" style="margin-top:8px"><div><small>Пробег</small><b>'+km.toLocaleString('ru-RU')+' км</b></div><div><small>Заправлено</small><b>'+L.toLocaleString('ru-RU')+' л</b></div><div><small>Поездок</small><b>'+vals('trips').length+'</b></div></div></div>';
+h+='<div class="c"><h2>Открытый путевой лист</h2>'+(open.length?open.map(r=>'<div class="r" data-e="waybills" data-i="'+r.id+'"><span>'+esc(lbl('waybills',r))+'<small>'+esc(nm('vehicles',r.vehicleId))+'</small></span></div>').join(''):'<small>Нет открытого листа</small>')+'<div class="bar"><button data-new="waybills">Добавить лист</button></div></div>';
+h+='<div class="c"><h2>Требует внимания: '+dp.length+'</h2>'+(dp.length?dp.slice(0,8).map(r=>'<div class="r"><span class="warn">Возможный дубль заправки '+r.liters+' л<small>'+fd(r.dateTime,1)+'</small></span><button class="s" data-nd="'+r.id+'">Не дубль</button></div>').join(''):'<small class="ok">Замечаний нет</small>')+'</div>';
+return h}
+
+/* ---------- Списки ---------- */
+function list(k){
+const E=ents[k],sk=E.sort;let a=vals(k);
+if(q){const s=q.toLowerCase();a=a.filter(r=>JSON.stringify(r).toLowerCase().includes(s)||lbl(k,r).toLowerCase().includes(s))}
+a.sort((x,y)=>sk?String(y[sk]||'').localeCompare(String(x[sk]||'')):String(x.name||'').localeCompare(String(y.name||''),'ru'));
+let h='<input id="q" placeholder="Поиск…" value="'+esc(q)+'"><div class="c">'+(a.length?a.slice(0,200).map(r=>'<div class="r" data-e="'+k+'" data-i="'+r.id+'"><span>'+esc(lbl(k,r))+'<small>'+esc(E.s?E.s(r)||'':'')+'</small></span><span class="a">'+(E.am?E.am(r):'')+'</span></div>').join(''):'<small>Пока пусто. Добавьте запись или импортируйте данные во вкладке «Ещё».</small>')+(a.length>200?'<small>Показаны первые 200 — уточните поиск</small>':'')+'</div><button class="fab" data-new="'+k+'">+</button>';
+return h}
+function more_(){
+let h='<div class="c"><h2>Справочники</h2>'+['vehicles','companies','cargos','places','periods','gasStations','stops'].map(k=>'<div class="r" data-go="'+k+'"><span>'+ents[k].t+'</span><span class="a">'+vals(k).length+'</span></div>').join('')+'</div>';
+h+='<div class="c"><h2>Обмен данными</h2><small>Загрузите ZIP-архив или CSV из АвтоПрофи. Существующие записи пропускаются.</small><input type="file" id="imp" accept=".zip,.csv" multiple style="margin-top:8px"><div id="ip" class="bar" style="display:block"></div><div class="bar"><button class="s" id="exp">Скачать копию (JSON)</button></div><div class="bar"><button class="s" id="lo">Выйти</button></div></div>';
+return h}
+
+/* ---------- Форма ---------- */
+function sheet(k,id,pre){
+const E=ents[k],r=id?D[k][id]:(pre||{});let h='<h2>'+(id?'Изменить':'Новая запись')+': '+E.t.toLowerCase()+'</h2>';
+E.f.forEach(([f,lab,t,o])=>{h+='<label>'+lab+'</label>';
+if(t=='s')h+='<select data-f="'+f+'">'+o.map(x=>'<option'+(r[f]==x?' selected':'')+'>'+x+'</option>').join('')+'</select>';
+else if(t=='r')h+='<select data-f="'+f+'"><option value="">—</option>'+Object.values(D[o]).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ru')).slice(0,400).map(x=>'<option value="'+x.id+'"'+(r[f]==x.id?' selected':'')+'>'+esc(lbl(o,x))+'</option>').join('')+'</select>';
+else if(t=='d')h+='<input type="datetime-local" data-f="'+f+'" data-t="d" value="'+toLocal(r[f])+'">';
+else if(t=='t')h+='<textarea rows="2" data-f="'+f+'">'+esc(r[f]||'')+'</textarea>';
+else h+='<input data-f="'+f+'" data-t="'+(t||'')+'" '+(t=='n'?'inputmode="decimal"':'')+' value="'+esc(r[f]??'')+'">'});
+if(k=='waybills'&&id){const km=Math.max(0,num(r.odometerIn)-num(r.odometerOut)),fl=vals('fuels').filter(x=>x.waybillId==id).reduce((a,x)=>a+num(x.liters),0),ac=vals('finances').filter(x=>x.waybillId==id&&x.type=='Начислено').reduce((a,x)=>a+num(x.amount),0);
+h+='<div class="g"><div><small>Пробег</small><b>'+km+' км</b></div><div><small>Заправки</small><b>'+fl+' л</b></div><div><small>Начислено</small><b>'+mny(ac)+'</b></div></div>'}
+h+='<div class="bar"><button id="sv">Сохранить</button><button class="s" id="cl">Отмена</button>'+(id?'<button class="d" id="dl">Удалить</button>':'')+'</div>';
+$('#shc').innerHTML=h;$('#sh').classList.add('o');
+$('#cl').onclick=()=>$('#sh').classList.remove('o');
+$('#sv').onclick=async()=>{const n={...r};$('#shc').querySelectorAll('[data-f]').forEach(e=>{const f=e.dataset.f;let v=e.value;if(e.dataset.t=='n')v=v===''?null:Number(String(v).replace(',','.'));if(e.dataset.t=='d')v=v?new Date(v).toISOString():null;n[f]=v});
+n.id=id||rid();if(k=='stops'&&n.placeId){n.placeName=nm('places',n.placeId);n.companyId=(D.places[n.placeId]||{}).companyId||n.companyId}if(E.a)n.name=E.a(n);const{error}=await sb.from(T(k)).upsert(n);if(error)return alert('Не удалось сохранить: '+error.message);await load(k);$('#sh').classList.remove('o');render()};
+if(id)$('#dl').onclick=async()=>{if(confirm('Удалить запись?')){if(k=='trips'){await sb.from('stops').delete().eq('tripId',id);await load('stops')}await sb.from(T(k)).delete().eq('id',id);await load(k);if(view&&view.id==id)view=vs.pop()||null;$('#sh').classList.remove('o');render()}}}
+
+/* ---------- Импорт / экспорт ---------- */
+function csv(t){t=t.replace(/^\uFEFF/,'');const rows=[];let r=[],c='',qq=false;for(let i=0;i<t.length;i++){const ch=t[i];if(qq){if(ch=='"'){if(t[i+1]=='"'){c+='"';i++}else qq=false}else c+=ch}else if(ch=='"')qq=true;else if(ch==','){r.push(c);c=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&t[i+1]=='\n')i++;r.push(c);c='';rows.push(r);r=[]}else c+=ch}
+if(c||r.length){r.push(c);rows.push(r)}const h=rows.shift()||[];return rows.filter(x=>x.length>1).map(x=>Object.fromEntries(h.map((k,i)=>[k,x[i]??'']))) }
+async function doImport(files){const ip=$('#ip'),src={};
+for(const f of files){if(/\.zip$/i.test(f.name)){if(!window.JSZip){ip.textContent='Не загрузился модуль ZIP — выберите CSV-файлы.';return}const z=await JSZip.loadAsync(f);for(const n of Object.keys(z.files)){if(/\.csv$/i.test(n))src[n.split('/').pop()]=await z.files[n].async('string')}}else src[f.name]=await f.text()}
+const by={};for(const [k,fn] of Object.entries(FILES)){if(!src[fn])continue;const nf=Object.fromEntries(ents[k].f.filter(x=>x[2]=='n').map(x=>[x[0],1]));
+for(const row of csv(src[fn])){if(!row.id)continue;const o={};for(const [a,b] of Object.entries(row)){if(b==='')continue;o[a]=nf[a]||a=='order'?Number(b):b}(by[k]=by[k]||[]).push(o)}}
+let done=0,bad=0;const tot=Object.values(by).reduce((a,x)=>a+x.length,0);ip.textContent='К загрузке: '+tot;
+for(const [k,rows] of Object.entries(by)){for(let i=0;i<rows.length;i+=100){const ch=rows.slice(i,i+100);const{error}=await sb.from(T(k)).upsert(ch,{onConflict:'id',ignoreDuplicates:true});if(error){bad+=ch.length;alert(k+': '+error.message)}else done+=ch.length;ip.textContent='Обработано '+done+' из '+tot+(bad?' · ошибок: '+bad:'')}}
+await loadAll();render();$('#ip').innerHTML='<span class="ok">Готово: '+done+' записей (дубликаты пропущены)'+(bad?', ошибок: '+bad:'')+'</span>'}
+function doExport(){const b=new Blob([JSON.stringify(Object.fromEntries(Object.keys(D).map(k=>[k,vals(k)])),null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='autoprofi-'+new Date().toISOString().slice(0,10)+'.json';a.click()}
+
+
+/* ---------- Детали ---------- */
+const rw=(k,r)=>'<div class="r" data-e="'+k+'" data-i="'+r.id+'"><span>'+esc(lbl(k,r))+'<small>'+esc(ents[k].s?ents[k].s(r)||'':'')+'</small></span><span class="a">'+(ents[k].am?ents[k].am(r):'')+'</span></div>';
+const sec=(t,k,rows,pre,ex)=>'<div class="c"><h2>'+t+' ('+rows.length+')</h2>'+(rows.map(r=>ex?ex(r):rw(k,r)).join('')||'<small>Нет записей</small>')+'<div class="bar"><button class="s" data-new="'+k+'" data-pre="'+esc(JSON.stringify(pre))+'">+ Добавить</button></div></div>';
+const cell=(a,b)=>'<div><small>'+a+'</small><b>'+b+'</b></div>';
+const fsum=(a,t)=>a.filter(f=>f.type==t).reduce((x,f)=>x+num(f.amount),0);
+function det(){const{e,id}=view,r=D[e]&&D[e][id];if(!r){view=null;return''}
+const now=new Date().toISOString();let h='<button class="s" data-back="1" style="margin-bottom:10px">← Назад</button>';
+if(e=='waybills'){
+const tr=vals('trips').filter(x=>x.waybillId==id).sort((a,b)=>String(a.name).localeCompare(b.name)),fu=vals('fuels').filter(x=>x.waybillId==id).sort((a,b)=>String(b.dateTime).localeCompare(a.dateTime)),fi=vals('finances').filter(x=>x.waybillId==id).sort((a,b)=>String(b.date).localeCompare(a.date));
+const km=Math.max(0,num(r.odometerIn)-num(r.odometerOut)),L=fu.reduce((x,f)=>x+num(f.liters),0),used=num(r.fuelOut)+L-num(r.fuelIn),cons=km>0?used/km*100:0,nrm=num((D.vehicles[r.vehicleId]||{}).fuelNorm),ac=fsum(fi,'Начислено'),pd=fsum(fi,'Оплачено');
+h+='<div class="c"><h2>'+esc(lbl(e,r))+'</h2><small>'+esc(nm('vehicles',r.vehicleId))+(r.trailerId?' + '+esc(nm('vehicles',r.trailerId)):'')+(r.returnDate?'':' · <span class="ok">открыт</span>')+'</small><div class="g" style="margin-top:8px">'+cell('Пробег',km.toLocaleString('ru-RU')+' км')+cell('Заправлено',L.toLocaleString('ru-RU')+' л')+cell('Израсходовано',Math.round(used)+' л')+cell('Расход',cons?cons.toFixed(1)+' л/100':'—')+cell('Норма',nrm?nrm+' л/100':'—')+cell('Остаток топлива',num(r.fuelIn)+' л')+'</div><div class="g" style="margin-top:8px">'+cell('Начислено',mny(ac))+cell('Оплачено',mny(pd))+cell('Долг',mny(ac-pd))+'</div>'+(r.notes?'<p style="white-space:pre-wrap;margin:8px 0 0">'+esc(r.notes)+'</p>':'')+'<div class="bar"><button data-ed="1">Изменить лист</button></div></div>';
+h+=sec('Поездки','trips',tr,{waybillId:id})+sec('Заправки','fuels',fu,{waybillId:id,dateTime:now,source:'АЗС'})+sec('Финансы','finances',fi,{waybillId:id,type:'Оплачено',date:now})}
+else{
+const st=vals('stops').filter(x=>x.tripId==id).sort((a,b)=>num(a.order)-num(b.order)),fi=vals('finances').filter(x=>x.tripId==id).sort((a,b)=>String(b.date).localeCompare(a.date));
+h+='<div class="c"><h2>'+esc(r.name)+'</h2><small>'+esc([r.cargo,r.weightKg?r.weightKg+' кг':'',r.loadingType].filter(Boolean).join(' · '))+'</small><div class="g" style="margin-top:8px">'+cell('Начислено',mny(r.accrual)||'—')+cell('Оплачено',mny(fsum(fi,'Оплачено')))+cell('Лист','<span style="font-size:12px">'+esc(nm('waybills',r.waybillId)||'—')+'</span>')+'</div>'+(r.notes?'<p style="white-space:pre-wrap;margin:8px 0 0">'+esc(r.notes)+'</p>':'')+'<div class="bar"><button data-ed="1">Изменить поездку</button></div></div>';
+h+=sec('Маршрут','stops',st,{tripId:id,order:st.length+1,direction:st.length?'Выгрузка':'Погрузка'},s=>'<div class="r" data-e="stops" data-i="'+s.id+'"><span>'+esc(s.direction+' · '+(nm('places',s.placeId)||s.placeName||'место не указано'))+'<small>'+esc(ents.stops.s(s)||'без даты')+'</small></span>'+(s.arrivedAt?'<span class="a ok">✓</span>':'<button class="s" data-arr="'+s.id+'">Прибыл</button>')+'</div>')
++sec('Финансы','finances',fi,{tripId:id,waybillId:r.waybillId,type:'Начислено',amount:r.accrual,date:now})}
+return h}
+
+/* ---------- Каркас ---------- */
+const NAV=[['home','🏠','Главная'],['waybills','📋','Листы'],['trips','🚚','Поездки'],['fuels','⛽','Заправки'],['finances','💰','Финансы'],['more','☰','Ещё']];
+function render(){
+$('#nv').innerHTML=NAV.map(([k,i,t])=>'<a data-t="'+k+'" class="'+(tab==k?'on':'')+'"><i>'+i+'</i>'+t+'</a>').join('');
+const m=$('#m');let h='';
+if(!db)h+='<div class="c warn">Облачная база недоступна. Откройте страницу в claude.ai, войдя в аккаунт.</div>';
+if(view)h+=det();else if(tab=='home')h+=home();else if(tab=='more'){h+=(more?'<button class="s" data-go="">← Назад</button><h2 style="margin:10px 0">'+ents[ent].t+'</h2>'+list(ent):more_())}else h+=list(tab);
+const fo=document.activeElement&&document.activeElement.id=='q';m.innerHTML=h;
+if(fo){const e=$('#q');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-e],[data-new],[data-go],[data-nd],#exp,#lo,[data-back],[data-ed],[data-arr]');if(!t)return;
+if(t.dataset.t){tab=t.dataset.t;more=false;view=null;vs=[];q='';scrollTo(0,0);render()}
+else if(t.dataset.nd){sb.from('fuels').update({notDup:true}).eq('id',t.dataset.nd).then(()=>load('fuels')).then(render)}
+else if(t.dataset.arr)sb.from('stops').update({arrivedAt:new Date().toISOString()}).eq('id',t.dataset.arr).then(()=>load('stops')).then(render);else if(t.dataset.back){view=vs.pop()||null;scrollTo(0,0);render()}else if(t.dataset.ed)sheet(view.e,view.id);else if(t.dataset.e){if(t.dataset.e=='waybills'||t.dataset.e=='trips'){vs.push(view);view={e:t.dataset.e,id:t.dataset.i};scrollTo(0,0);render()}else sheet(t.dataset.e,t.dataset.i)}
+else if(t.dataset.new)sheet(t.dataset.new,null,t.dataset.pre?JSON.parse(t.dataset.pre):null);
+else if(t.id=='exp')doExport();else if(t.id=='lo')sb.auth.signOut().then(()=>location.reload());
+else if(t.dataset.go!==undefined){if(t.dataset.go){ent=t.dataset.go;more=true}else more=false;q='';render()}});
+document.addEventListener('input',e=>{if(e.target.id=='q'){q=e.target.value;render()}});
+document.addEventListener('change',e=>{if(e.target.id=='imp')doImport([...e.target.files])});
+async function load(k){const{data,error}=await sb.from(T(k)).select('*').limit(5000);let rows=data;
+if(error){try{rows=JSON.parse(localStorage.getItem('d_'+k)||'[]')}catch(e){rows=[]}$('#st').textContent='Офлайн (кэш)'}else{try{localStorage.setItem('d_'+k,JSON.stringify(data))}catch(e){}}
+D[k]={};(rows||[]).forEach(r=>D[k][r.id]=r)}
+async function loadAll(){$('#st').textContent='Загрузка…';await Promise.all(Object.keys(ents).map(load));if($('#st').textContent=='Загрузка…')$('#st').textContent='☁ Синхронизировано'}
+function authView(){$('#nv').innerHTML='';$('#m').innerHTML='<div class="c"><h2>Вход</h2><label>Email</label><input id="em" type="email" autocomplete="username"><label>Пароль</label><input id="pw" type="password" autocomplete="current-password"><div class="bar"><button id="li">Войти</button></div><small id="ae" class="warn"></small></div>';
+$('#li').onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});if(error)$('#ae').textContent='Не удалось войти: '+error.message;else start()}}
+async function start(){const{data}=await sb.auth.getSession();if(!data.session){$('#st').textContent='Нужен вход';authView();return}db=true;render();await loadAll();render()}
+start();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script></body></html>
